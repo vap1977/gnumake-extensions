@@ -1,5 +1,5 @@
 /*
- * File: include_once_extension.c
+ * File: gnumake_include_once_extension.c
  * Author: Andrey P. Vasilyev <vap@vap.name>
  * Created: Sun Dec 15 19:57:51 2019
  * $Id$
@@ -14,10 +14,10 @@
 
   Usage:
 
-  include_once_extension.so: include_once_extension.c
+  gnumake_include_once_extension.so: gnumake_include_once_extension.c
           $(CC) -shared -fPIC -o $@ $<
   ...
-  load include_once_extension.so
+  load gnumake_include_once_extension.so
   ...
   $(include-once ../subsystem/subsystem.mk)
 
@@ -155,7 +155,7 @@ static char *include_once_debug (const char *nm, unsigned int argc, char **argv)
   return NULL;
 }
 
-int include_once_extension_gmk_setup (void) {
+int gnumake_include_once_extension_gmk_setup (void) {
   gmk_add_function ("include-once", include_once, 1, 0, GMK_FUNC_DEFAULT);
   gmk_add_function ("include-once-debug", include_once_debug, 1, 0, GMK_FUNC_DEFAULT);
   return 1; // success
