@@ -12,6 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include <gnumake.h>
 
@@ -92,29 +93,78 @@ static void gmk_eval_fmt (const char *fmt, ...) {
   free (formatted);
 }
 
+static char *retrieve_first_word (const char **str) {
+  while ((**str) && isspace (**str))
+    ++*str;
+  const char *word_start = *str;
+  while ((**str) && (!isspace (**str)))
+    ++*str;
+  const char *word_end = *str;
+
+  if ((*word_start == 0) || (word_end == word_start))
+    return 0;
+
+  size_t word_len = word_end - word_start;
+
+  char *result = (char *)malloc (word_len + 1);
+  if (result == NULL) {
+    // ...         
+    return NULL;
+  }
+
+  memcpy (result, word_start, word_len);
+  result [word_len] = 0;
+  return result;
+}
+
 
 static char *from_here (const char *nm, unsigned int argc, char **argv) {
-  char *filename = argv [0];
+  const char *filename_list = argv [0];
 
-  if (!strncmp (filename, "/", 1)) {
-    // Absolute path
-    return gmk_expand_fmt ("$(abspath %s)", filename);
-  } else {
-    // Relative path
-    char *here;
-    char *here_undefined = gmk_expand ("$(filter undefined,$(origin here))");
-    if ((here_undefined != NULL) && (!strcmp (here_undefined, "undefined"))) {
-      // HERE is undefined, need to get from MAKEFILE_LIST
-      here = gmk_expand ("$(abspath $(dir $(firstword $(MAKEFILE_LIST))))");
+  char *here = NULL;
+  char *result = NULL;
+
+  while (1) {
+    char *filename = retrieve_first_word (&filename_list);
+    if (filename == NULL)
+      break;
+
+    if (!strncmp (filename, "/", 1)) {
+      // Absolute path
+      char *old_result = result;
+      if (old_result) {
+        result = gmk_expand_fmt ("%s $(abspath %s)", old_result, filename);
+        gmk_free (old_result);
+      } else {
+        result = gmk_expand_fmt ("$(abspath %s)", filename);
+      }
     } else {
-      here = gmk_expand ("$(abspath $(here))");
+      // Relative path
+      if (here == NULL) {
+        char *here_undefined = gmk_expand ("$(filter undefined,$(origin here))");
+        if ((here_undefined != NULL) && (!strcmp (here_undefined, "undefined"))) {
+          // HERE is undefined, need to get from MAKEFILE_LIST
+          here = gmk_expand ("$(abspath $(dir $(firstword $(MAKEFILE_LIST))))");
+        } else {
+          here = gmk_expand ("$(abspath $(here))");
+        }
+        if (here_undefined)
+          gmk_free (here_undefined);
+      }
+      char *old_result = result;
+      if (old_result) {
+        result = gmk_expand_fmt ("%s $(abspath %s/%s)", old_result, here, filename);
+        gmk_free (old_result);
+      } else {
+        result = gmk_expand_fmt ("$(abspath %s/%s)", here, filename);
+      }
     }
-    if (here_undefined)
-      gmk_free (here_undefined);
-    char *result = gmk_expand_fmt ("$(abspath %s/%s)", here, filename);
-    gmk_free (here);
-    return result;
   }
+
+  if (here != NULL)
+    gmk_free (here);
+
+  return result;
 }
 
 
