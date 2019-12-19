@@ -173,19 +173,19 @@ static char *from_here (const char *nm, unsigned int argc, char **argv) {
 static char *include_subsystem (const char *nm, unsigned int argc, char **argv) {
   char *filename = argv [0];
   char *filename_from_here = gmk_expand_fmt ("$(from-here %s)", filename);
-  gmk_eval_fmt ("here_stack:=$(here_stack) $(here)");
+  gmk_eval_fmt ("___here_stack:=$(___here_stack) $(here)");
   gmk_eval_fmt ("here:=$(abspath $(dir %s))", filename_from_here);
 
-  char *found = gmk_expand_fmt ("$(filter %s,$(past_includes))", filename_from_here);
+  char *found = gmk_expand_fmt ("$(filter %s,$(___past_includes))", filename_from_here);
   if ((found == NULL) || (0 == strlen (found))) {
-    gmk_eval_fmt ("past_includes:=$(sort $(past_includes) %s)", filename_from_here);
+    gmk_eval_fmt ("___past_includes:=$(sort $(___past_includes) %s)", filename_from_here);
     gmk_eval_fmt ("include %s", filename_from_here);
   }
   if (found)
     gmk_free (found);
 
-  gmk_eval_fmt ("here:=$(lastword $(here_stack))");
-  gmk_eval_fmt ("here_stack:=$(filter-out $(here),$(here_stack))");
+  gmk_eval_fmt ("here:=$(lastword $(___here_stack))");
+  gmk_eval_fmt ("___here_stack:=$(filter-out $(here),$(___here_stack))");
   gmk_free (filename_from_here);
 }
 
