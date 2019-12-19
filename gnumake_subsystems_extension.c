@@ -106,7 +106,7 @@ static char *retrieve_first_word (const char **str) {
 
   size_t word_len = word_end - word_start;
 
-  char *result = (char *)malloc (word_len + 1);
+  char *result = (char *)gmk_alloc (word_len + 1);
   if (result == NULL) {
     // ...         
     return NULL;
@@ -159,6 +159,8 @@ static char *from_here (const char *nm, unsigned int argc, char **argv) {
         result = gmk_expand_fmt ("$(abspath %s/%s)", here, filename);
       }
     }
+
+    gmk_free (filename);
   }
 
   if (here != NULL)
