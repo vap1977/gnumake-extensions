@@ -187,6 +187,8 @@ static char *include_subsystem (const char *nm, unsigned int argc, char **argv) 
     gmk_free (found);
 
   gmk_free (filename_from_here);
+
+  return 0;
 }
 
 
